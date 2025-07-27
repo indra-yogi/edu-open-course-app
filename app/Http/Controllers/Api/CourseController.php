@@ -102,13 +102,24 @@ class CourseController extends Controller
                 }),
                 'likes_count' => $course->likes_count,
                 'comments_count' => $course->comments->count(),
-                'comments' => $course->comments->map(function ($comment) {
-                    return [
-                        'user' => $comment->user->name,
-                        'comment' => $comment->comment,
-                        'created_at' => $comment->created_at->diffForHumans(),
-                    ];
-                }),
+                'comments' => $course->comments
+                    ->whereNull('parent_id')
+                    ->map(function ($comment) {
+                        return [
+                            'id' => $comment->id,
+                            'user' => $comment->user->name,
+                            'comment' => $comment->comment,
+                            'created_at' => $comment->created_at->diffForHumans(),
+                            'replies' => $comment->replies->map(function ($reply) {
+                                return [
+                                    'id' => $reply->id,
+                                    'user' => $reply->user->name,
+                                    'comment' => $reply->comment,
+                                    'created_at' => $reply->created_at->diffForHumans(),
+                                ];
+                            })->values()->toArray(),
+                        ];
+                    })->values()->toArray(),
             ]
         ]);
     }
@@ -259,7 +270,8 @@ class CourseController extends Controller
     {
         $request->validate([
             'comment' => 'required|string|max:1000',
-            'user_id' => 'required|exists:users,id'
+            'user_id' => 'required|exists:users,id',
+            'parent_id' => 'nullable|exists:course_comments,id',
         ]);
 
         $course = Course::where('id', $id)->where('is_approved', true)->first();
@@ -275,6 +287,7 @@ class CourseController extends Controller
         $comment->course_id = $course->id;
         $comment->user_id = $request->input('user_id');
         $comment->comment = $request->comment;
+        $comment->parent_id = $request->input('parent_id');
         $comment->save();
 
         return response()->json([
