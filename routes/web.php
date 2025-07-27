@@ -11,9 +11,14 @@ Route::get('/register', [WebController::class, 'register'])->name('register');
 Route::prefix('auth')->name('auth.')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->name('login');
 });
+Route::prefix('admin')->middleware(['auth'])->group(function() {
+    Route::get('/dashboard', [WebController::class, 'adminDashboard'])->name('admin.dashboard');
+});
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [WebController::class, 'dashboard'])->name('user.dashboard');
     Route::get('/course/create', [WebController::class, 'createCourse'])->name('course.create');
     Route::get('/course/{id}', [WebController::class, 'detailCourse'])->name('course.detail');
     Route::get('/course/{id}/edit', [WebController::class, 'courseEdit'])->name('course.edit');
 });
+
+Route::post('/logout', [WebController::class, 'logout'])->name('logout');
