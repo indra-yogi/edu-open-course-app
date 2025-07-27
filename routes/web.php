@@ -11,6 +11,9 @@ Route::get('/register', [WebController::class, 'register'])->name('register');
 Route::prefix('auth')->name('auth.')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->name('login');
 });
+Route::prefix('admin')->middleware(['auth'])->group(function() {
+    Route::get('/dashboard', [WebController::class, 'adminDashboard'])->name('admin.dashboard');
+});
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [WebController::class, 'dashboard'])->name('user.dashboard');
     Route::get('/course/create', [WebController::class, 'createCourse'])->name('course.create');

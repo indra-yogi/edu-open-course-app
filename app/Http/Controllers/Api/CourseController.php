@@ -68,6 +68,34 @@ class CourseController extends Controller
         ]);
     }
 
+    public function adminCourses()
+    {
+        $courses = Course::with(['user', 'materials', 'likes', 'comments', 'categories'])
+            ->get()
+            ->map(function ($course) {
+                return [
+                    'id' => $course->id,
+                    'title' => $course->title,
+                    'description' => $course->description,
+                    'thumbnail' => asset('storage/' . $course->thumbnail),
+                    'uploader' => $course->user->name,
+                    'created_at' => $course->created_at->format('Y-m-d H:i'),
+                    'categories' => $course->categories->pluck('name')->join(', '),
+                    'materials_count' => $course->materials->count(),
+                    'likes_count' => $course->likes->count(),
+                    'comments_count' => $course->comments->count(),
+                    'is_approved' => (bool) $course->is_approved,
+                    'status' => $course->is_approved ?
+                        '<span class="badge bg-success">Approved</span>' :
+                        '<span class="badge bg-warning">Pending</span>'
+                ];
+            });
+
+        return response()->json([
+            'data' => $courses
+        ]);
+    }
+
     public function courseDetail($id)
     {
         $course = Course::with(['user:id,name', 'materials', 'categories:id,name'])
@@ -294,6 +322,39 @@ class CourseController extends Controller
             'status' => 'success',
             'message' => 'Comment posted successfully.'
         ]);
+    }
+
+    public function approve(Course $course, Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'status' => 'required|boolean'
+            ]);
+
+            $course->update([
+                'is_approved' => $validated['status'],
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => $validated['status']
+                    ? 'Course successfully approved'
+                    : 'Course successfully unapproved',
+                'data' => [
+                    'is_approved' => $course->is_approved,
+                    'status_badge' => $course->is_approved
+                        ? '<span class="badge bg-success">Approved</span>'
+                        : '<span class="badge bg-warning">Pending</span>'
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update approval status',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
 }

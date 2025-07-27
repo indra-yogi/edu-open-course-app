@@ -14,4 +14,11 @@ Route::prefix('course')->name('api.course.')->group(function () {
 });
 
 
+Route::prefix('admin')->group(function () {
+    Route::get('/courses', [CourseController::class, 'adminCourses'])->name('admin.courses.index');
+    Route::put('/courses/{course}/approve', [CourseController::class, 'approve'])->name('admin.courses.approve');
+});
+
+
+
 

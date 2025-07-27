@@ -61,6 +61,18 @@ class WebController extends Controller
         return view('user.detail-course', compact('id'));
     }
 
+    public function adminDashboard(Request $request) {
+        return view('admin.dashboard');
+    }
+
+    public function logout(Request $request)
+    {
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        return redirect('/');
+    }
+
     public function logout(Request $request)
     {
         Auth::logout();
