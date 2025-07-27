@@ -58,62 +58,73 @@
                     let html = '';
                     res.data.forEach(course => {
                         html += `
-                        <div class="col-md-4">
-                            <div class="course-card">
-                                <img src="{{ asset('assets/img') }}/${course.thumbnail ?? 'default.jpg'}" class="course-thumbnail mb-2" alt="Course Thumbnail">
-                                <h5>${course.title}</h5>
-                                <p class="course-meta">Uploaded by: ${course.uploader ?? 'Unknown'}</p>
-                                <p>${course.description}</p>
-                                <div class="mb-2">
-                                    ${course.categories.map(cat => `<span class="category-badge">${cat}</span>`).join('')}
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100">
+                                <img src="{{ asset('assets/img') }}/${course.thumbnail ?? 'default.jpg'}" class="card-img-top" alt="Course Thumbnail">
+                                <div class="card-body">
+                                    <h5 class="card-title">${course.title}</h5>
+                                    <p class="text-muted small">Uploaded by: ${course.uploader ?? 'Unknown'}</p>
+                                    <p class="card-text">${course.description.substring(0, 100)}${course.description.length > 100 ? '...' : ''}</p>
+                                    <div class="mb-2">
+                                        ${course.categories.map(cat => `<span class="badge bg-secondary me-1">${cat}</span>`).join('')}
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="text-muted"><i class="fas fa-heart text-danger"></i> ${course.likes_count}</span>
+                                        <button class="btn btn-sm btn-primary view-course-btn" data-id="${course.id}">
+                                            View Details
+                                        </button>
+                                    </div>
                                 </div>
-                                <p class="course-meta"><i class="fas fa-heart text-danger"></i> ${course.likes_count} likes</p>
                             </div>
                         </div>
-                    `;
+                        `;
                     });
                     $('#course-list').html(html);
                 } else {
-                    $('#course-list').html('<p>No approved courses found.</p>');
+                    $('#course-list').html(
+                        '<div class="col-12"><div class="alert alert-info">No courses found.</div></div>'
+                    );
                 }
             }).fail(function() {
-                $('#course-list').html('<p>Failed to load courses.</p>');
+                $('#course-list').html(
+                    '<div class="col-12"><div class="alert alert-danger">Failed to load courses. Please try again later.</div></div>'
+                );
             });
-        });
 
-        $(document).on('click', '.view-course-btn', function() {
-            const courseId = $(this).data('id');
+            // View course button click handler
+            $(document).on('click', '.view-course-btn', function() {
+                const courseId = $(this).data('id');
 
-            if (!isLoggedIn) {
-                bootbox.dialog({
-                    title: '<i class="fas fa-lock me-2 text-success"></i> Login Required',
-                    message: `
-                <div class="text-center">
-                    <p class="mb-3">Please log in to access this course and continue learning with us.</p>
-                    <i class="fas fa-user-lock fa-3x text-success mb-3"></i>
-                </div>
-            `,
-                    buttons: {
-                        cancel: {
-                            label: '<i class="fas fa-times"></i> Cancel',
-                            className: 'btn-secondary'
-                        },
-                        login: {
-                            label: '<i class="fas fa-sign-in-alt"></i> Login Now',
-                            className: 'btn-success',
-                            callback: function() {
-                                window.location.href = "{{ route('login') }}";
+                if (!isLoggedIn) {
+                    bootbox.dialog({
+                        title: '<i class="fas fa-lock me-2"></i> Login Required',
+                        message: `
+                            <div class="text-center">
+                                <p class="mb-3">You need to login to view course details.</p>
+                                <i class="fas fa-sign-in-alt fa-3x text-primary mb-3"></i>
+                                <p>Login to access all course materials and features.</p>
+                            </div>
+                        `,
+                        buttons: {
+                            cancel: {
+                                label: '<i class="fas fa-times"></i> Close',
+                                className: 'btn-secondary'
+                            },
+                            login: {
+                                label: '<i class="fas fa-sign-in-alt"></i> Login Now',
+                                className: 'btn-primary',
+                                callback: function() {
+                                    window.location.href = "{{ route('login') }}";
+                                }
                             }
                         }
-                    },
-                    closeButton: false
-                });
+                    });
+                    return;
+                }
 
-                return;
-            }
-
-            // User is logged in — redirect to course detail
-            window.location.href = `/course/${courseId}`;
+                // User is logged in - redirect to course detail with ID
+                window.location.href = "{{ url('/course') }}/" + courseId;
+            });
         });
     </script>
 @endsection

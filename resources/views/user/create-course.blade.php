@@ -109,7 +109,7 @@
                     <select class="form-select" id="material_type" name="material_type" required>
                         <option value="">Select Material Type</option>
                         <option value="pdf">PDF</option>
-                        <option value="video">YouTube Video</option>
+                        <option value="video">Video</option>
                     </select>
                 </div>
 
@@ -139,20 +139,12 @@
 
         $('#material_type').on('change', function() {
             const type = $(this).val();
+            $('#pdf-upload-group, #video-link-group').hide().find('input').prop('required', false);
 
             if (type === 'pdf') {
-                $('#pdf-upload-group').show();
-                $('#video-link-group').hide();
-                $('#material_link').val('');
+                $('#pdf-upload-group').show().find('input').prop('required', true);
             } else if (type === 'video') {
-                $('#video-link-group').show();
-                $('#pdf-upload-group').hide();
-                $('#material_file').val('');
-            } else {
-                $('#pdf-upload-group').hide();
-                $('#video-link-group').hide();
-                $('#material_file').val('');
-                $('#material_link').val('');
+                $('#video-link-group').show().find('input').prop('required', true);
             }
         });
 
@@ -160,6 +152,14 @@
             e.preventDefault();
 
             const formData = new FormData(this);
+            const materialType = $('#material_type').val();
+
+            // Only append the relevant field based on material type
+            if (materialType === 'pdf') {
+                formData.delete('material_link'); // Remove video link if exists
+            } else if (materialType === 'video') {
+                formData.delete('material_file'); // Remove PDF file if exists
+            }
 
             formData.append('user_id', "{{ auth()->user()->id }}");
 
@@ -174,7 +174,7 @@
                         `<div class="alert alert-success">${response.message}</div>`
                     );
                     $('#create-course-form')[0].reset();
-                    $('#pdf-upload-group, #video-link-group').addClass('d-none');
+                    $('#pdf-upload-group, #video-link-group').hide();
                 },
                 error: function(xhr) {
                     let errorHtml = '<div class="alert alert-danger"><ul>';
