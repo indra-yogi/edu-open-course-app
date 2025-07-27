@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\CourseCategory;
 
 class WebController extends Controller
 {
@@ -35,5 +36,27 @@ class WebController extends Controller
     public function login()
     {
         return view('auth.login');
+    }
+
+    public function register()
+    {
+        return view('auth.register');
+    }
+
+    public function dashboard() {
+        return view('user.dashboard');
+    }
+
+    public function course() {
+        return view('course');
+    }
+
+    public function createCourse() {
+        $categories = CourseCategory::all(); // get all categories
+        return view('user.create-course', compact('categories'));
+    }
+
+    public function detailCourse($id) {
+        return view('user.detail-course', compact('id'));
     }
 }

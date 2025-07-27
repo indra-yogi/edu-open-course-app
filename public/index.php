@@ -5,6 +5,11 @@ use Illuminate\Http\Request;
 
 define('LARAVEL_START', microtime(true));
 
+//        PEMROGRAMAN WEB II
+//        Kelompok:
+//        1. Indra Yogi Prasetya
+//        2. Muhammad Fadilah Fauzan
+
 // Determine if the application is in maintenance mode...
 if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php')) {
     require $maintenance;

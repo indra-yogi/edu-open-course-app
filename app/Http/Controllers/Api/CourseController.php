@@ -70,13 +70,6 @@ class CourseController extends Controller
 
     public function courseDetail($id)
     {
-        if (!auth()->check()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Unauthorized. Please login to view this course.'
-            ], 401);
-        }
-
         $course = Course::with(['user:id,name', 'materials', 'categories:id,name'])
             ->where('id', $id)
             ->where('is_approved', true)
@@ -95,17 +88,27 @@ class CourseController extends Controller
                 'id' => $course->id,
                 'title' => $course->title,
                 'description' => $course->description,
-                'thumbnail' => asset('assets/img/' . $course->thumbnail),
+                'thumbnail' => $course->thumbnail,
                 'creator' => $course->user->name,
                 'categories' => $course->categories->pluck('name'),
                 'materials' => $course->materials->map(function ($material) {
                     return [
                         'title' => $material->title,
                         'file_type' => $material->file_type,
-                        'path_file' => $material->path_file,
+                        'path_file' => $material->file_type === 'pdf'
+                            ? asset('assets/materials/' . $material->file_path)
+                            : $material->file_path,
                     ];
                 }),
                 'likes_count' => $course->likes_count,
+                'comments_count' => $course->comments->count(),
+                'comments' => $course->comments->map(function ($comment) {
+                    return [
+                        'user' => $comment->user->name,
+                        'comment' => $comment->comment,
+                        'created_at' => $comment->created_at->diffForHumans(),
+                    ];
+                }),
             ]
         ]);
     }
@@ -250,6 +253,34 @@ class CourseController extends Controller
         $course->delete();
 
         return response()->json(['status' => 'success', 'message' => 'Course deleted.']);
+    }
+
+    public function postComment(Request $request, $id)
+    {
+        $request->validate([
+            'comment' => 'required|string|max:1000',
+            'user_id' => 'required|exists:users,id'
+        ]);
+
+        $course = Course::where('id', $id)->where('is_approved', true)->first();
+
+        if (!$course) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Course not found or not approved.'
+            ], 404);
+        }
+
+        $comment = new CourseComment();
+        $comment->course_id = $course->id;
+        $comment->user_id = $request->input('user_id');
+        $comment->comment = $request->comment;
+        $comment->save();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Comment posted successfully.'
+        ]);
     }
 
 }
