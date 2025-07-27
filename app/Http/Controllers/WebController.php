@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\CourseCategory;
+use Illuminate\Support\Facades\Auth;
 
 class WebController extends Controller
 {
@@ -58,5 +59,13 @@ class WebController extends Controller
 
     public function detailCourse($id) {
         return view('user.detail-course', compact('id'));
+    }
+
+    public function logout(Request $request)
+    {
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        return redirect('/');
     }
 }

@@ -17,3 +17,5 @@ Route::middleware('auth')->group(function () {
     Route::get('/course/{id}', [WebController::class, 'detailCourse'])->name('course.detail');
     Route::get('/course/{id}/edit', [WebController::class, 'courseEdit'])->name('course.edit');
 });
+
+Route::post('/logout', [WebController::class, 'logout'])->name('logout');
